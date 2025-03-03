@@ -1,0 +1,18 @@
+[Unit]
+Description=Backend Service
+After=network.target
+
+[Service]
+WorkingDirectory=/home/vagrant/backend
+ExecStart=/usr/bin/java -jar /home/vagrant/backend/{{ jar_file.files[0].path | basename }}
+Restart=always
+User=vagrant
+Group=vagrant
+Environment=SPRING_PROFILES_ACTIVE={{profile}}
+Environment=DB_URL={{db_url}}
+Environment=DB_PASSWORD={{db_password}}
+Environment=DB_LOGIN={{db_user}}
+
+
+[Install]
+WantedBy=multi-user.target

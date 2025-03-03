@@ -1,0 +1,48 @@
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+        upgrade: yes
+        
+    
+    - name: Clone the frontend repository
+      git:
+        repo: 'https://{{ github_token }}@github.com/NazarPry/FrontArtifacts.git'  
+        dest: /home/vagrant/frontend  
+
+   
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Remove default Nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Collect backend IPs
+      set_fact:
+        backend_ips: "{{ groups['backend'] }}"
+
+    - name: Configure Nginx to serve frontend
+      template:
+        src: nginx-frontend.j2  
+        dest: /etc/nginx/sites-available/frontend
+
+    
+    - name: Enable frontend site in Nginx
+      shell: nginx -t && ln -s /etc/nginx/sites-available/frontend /etc/nginx/sites-enabled/frontend
+      args:
+        creates: /etc/nginx/sites-enabled/frontend  
+
+    - name: Move build files to Nginx directory
+      copy:
+        src: /home/vagrant/frontend/
+        dest: /var/www/frontend/
+        remote_src: yes
+    
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: restarted

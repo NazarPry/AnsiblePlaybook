@@ -1,0 +1,76 @@
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+        upgrade: yes
+    
+    - name: Ensure PostgreSQL is installed
+      apt:
+        name: postgresql
+        state: present
+        update_cache: yes
+
+    - name: Ensure python3-psycopg2 is installed
+      apt:
+        name: python3-psycopg2
+        state: present
+        update_cache: yes
+   
+    - name: Ensure PostgreSQL service is running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+    
+    - name: Create a new PostgreSQL database
+      postgresql_db:
+        name: "{{ db_name }}"
+        state: present
+      become_user: postgres
+      
+        
+    - name: Create a new PostgreSQL user
+      postgresql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        state: present
+      become_user: postgres
+
+    - name: Grant all privileges on the database to the user
+      postgresql_privs:
+        database: "{{ db_name }}"
+        roles: "{{ db_user }}"
+        privs: ALL
+        type: database
+        state: present
+      become_user: postgres
+
+    - name: Grant all privileges on the public schema to the user
+      postgresql_privs:
+        db: "{{ db_name }}"
+        role: "{{ db_user }}"
+        objs: public
+        privs: ALL
+        type: schema
+      become_user: postgres
+
+    - name: Update listen_addresses in postgresql.conf
+      lineinfile:
+        path: /etc/postgresql/{{db_version}}/main/postgresql.conf
+        regexp: '^listen_addresses\s*='
+        line: "listen_addresses = '*'"  
+        state: present
+
+    - name: Add my network to pg_hba.conf
+      lineinfile:
+        path: /etc/postgresql/{{db_version}}/main/pg_hba.conf
+        line: "host    all             all             {{access_network}}/24       scram-sha-256"
+        create: yes
+        state: present
+        insertafter: '# IPv4 local connections:'
+
+
+    - name: Restart PostgreSQL
+      systemd:
+        name: postgresql
+        state: restarted
+

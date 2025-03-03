@@ -1,0 +1,36 @@
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+        upgrade: yes
+
+    - name: Install OpenJDK 17
+      apt:
+        name: openjdk-17-jdk
+        state: present
+          
+    - name: Clone backend repository
+      git:
+        repo: 'https://{{ github_token }}@github.com/NazarPry/BackendArtifacts.git'
+        dest: /home/vagrant/backend
+
+   
+    - name: Find JAR file in target directory
+      find:
+        paths: /home/vagrant/backend/
+        patterns: "*.jar"
+      register: jar_file
+      
+
+    - name: Set up backend service with systemd
+      template:
+        src: backservice.j2
+        dest: /etc/systemd/system/backend.service
+      
+
+    - name: Enable and start backend service
+      systemd:
+        daemon_reload: yes
+        name: backend.service
+        enabled: yes
+        state: restarted

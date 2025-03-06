@@ -1,4 +1,7 @@
 db_name: "mydb"
 db_user: "nazar"
-access_network: "192.168.56.0"
+access_network: "192.168.56.0/24"
 db_version: 14
+db_options:
+  - name: "listen_addresses"
+    value: "*"

@@ -2,16 +2,19 @@
   hosts: database
   become: yes
   roles:
+    - common
     - database
 
 - name: Setup Backend
   hosts: backend
   become: yes
   roles:
+    - common
     - backend
 
 - name: Setup Frontend
   hosts: frontend
   become: yes
   roles:
+    - common
     - frontend

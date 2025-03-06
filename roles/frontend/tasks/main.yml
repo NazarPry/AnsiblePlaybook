@@ -1,10 +1,4 @@
 
-    - name: Update apt packages
-      apt:
-        update_cache: yes
-        upgrade: yes
-        
-    
     - name: Clone the frontend repository
       git:
         repo: 'https://{{ github_token }}@github.com/NazarPry/FrontArtifacts.git'  
@@ -16,7 +10,7 @@
         name: nginx
         state: present
 
-    - name: Remove default Nginx site
+    - name: Remove default Nginx site if exists
       file:
         path: /etc/nginx/sites-enabled/default
         state: absent
@@ -32,17 +26,18 @@
 
     
     - name: Enable frontend site in Nginx
-      shell: nginx -t && ln -s /etc/nginx/sites-available/frontend /etc/nginx/sites-enabled/frontend
-      args:
-        creates: /etc/nginx/sites-enabled/frontend  
-
+      file:
+        src: /etc/nginx/sites-available/frontend
+        dest: /etc/nginx/sites-enabled/frontend
+        state: link
+      
     - name: Move build files to Nginx directory
       copy:
         src: /home/vagrant/frontend/
         dest: /var/www/frontend/
         remote_src: yes
     
-    - name: Reload Nginx
+    - name: Restard Nginx
       service:
         name: nginx
         state: restarted
